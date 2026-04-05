@@ -1,0 +1,48 @@
+services:
+
+  # ── PostgreSQL Database ──────────────────────────────────────
+  db:
+    image: postgres:15
+    container_name: feastly_db
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: feastly
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # ── FastAPI Backend ──────────────────────────────────────────
+  backend:
+    build: ./backend
+    container_name: feastly_backend
+    restart: always
+    ports:
+      - "8000:8000"
+    environment:
+      DATABASE_URL: postgresql://postgres:postgres@db:5432/feastly
+      JWT_SECRET: your-super-secret-jwt-key-change-this
+      DISABLE_RECAPTCHA: "true"
+    depends_on:
+      db:
+        condition: service_healthy
+
+  # ── React Frontend ───────────────────────────────────────────
+  frontend:
+    build: ./frontend
+    container_name: feastly_frontend
+    restart: always
+    ports:
+      - "5173:5173"
+    depends_on:
+      - backend
+
+volumes:
+  postgres_data:
