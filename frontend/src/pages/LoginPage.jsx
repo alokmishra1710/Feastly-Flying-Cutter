@@ -35,7 +35,7 @@ export default function LoginPage() {
       navigate(res.data.user.is_admin ? "/admin" : "/menu");
     } catch (err) {
       addToast(err.response?.data?.detail || "Invalid email or password", "error");
-      recaptchaRef.current.reset(); // ← reset captcha after failed attempt
+      recaptchaRef.current.reset(); // ← reset so user can try again
     } finally {
       setLoading(false);
     }
@@ -101,6 +101,7 @@ export default function LoginPage() {
                     type={showPass ? "text" : "password"} className="field-input field-input--pass"
                     placeholder="••••••••" value={password}
                     onChange={(e) => setPassword(e.target.value)} required
+                    autoComplete="current-password"
                   />
                   <button type="button" className="field-eye" onClick={() => setShowPass(!showPass)}>
                     {showPass
