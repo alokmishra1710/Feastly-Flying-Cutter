@@ -34,7 +34,8 @@ export default function LoginPage() {
       addToast(`Welcome back, ${res.data.user.email.split("@")[0]}!`);
       navigate(res.data.user.is_admin ? "/admin" : "/menu");
     } catch (err) {
-      addToast(err.response?.data?.detail || "Invalid credentials", "error");
+      addToast(err.response?.data?.detail || "Invalid email or password", "error");
+      recaptchaRef.current.reset(); // ← reset captcha after failed attempt
     } finally {
       setLoading(false);
     }
@@ -125,6 +126,9 @@ export default function LoginPage() {
             <p className="auth-switch">
               Don't have an account?{" "}
               <Link to="/signup" className="auth-link">Create one free</Link>
+            </p>
+            <p className="auth-switch" style={{ marginTop: "8px", fontSize: "0.8rem" }}>
+              Forgot password? Contact admin to reset.
             </p>
           </div>
         </div>
