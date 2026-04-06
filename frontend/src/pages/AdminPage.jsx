@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import {
   getAllUsers, adminCreateUser, toggleAdmin, deleteAccount,
+  resetUserPassword,
   createFood, getFoods, updateFood, deleteFood,
   getAllOrders,
 } from "../api";
@@ -294,6 +295,9 @@ function UsersTab() {
   const [togglingId, setTogglingId] = useState(null);
   const [deletingId, setDeletingId] = useState(null);
   const [confirmDelete, setConfirmDelete] = useState(null);
+  const [resetId, setResetId] = useState(null);
+  const [resetPassword, setResetPassword] = useState("");
+  const [resetting, setResetting] = useState(false);
 
   const load = () => {
     setLoading(true);
@@ -346,6 +350,24 @@ function UsersTab() {
     } finally {
       setDeletingId(null);
       setConfirmDelete(null);
+    }
+  };
+
+  const handleReset = async (userId) => {
+    if (!resetPassword.trim() || resetPassword.length < 6) {
+      addToast("Password must be at least 6 characters", "error");
+      return;
+    }
+    setResetting(true);
+    try {
+      const res = await resetUserPassword(userId, resetPassword);
+      addToast(res.data.message || "Password reset successfully!");
+      setResetId(null);
+      setResetPassword("");
+    } catch (err) {
+      addToast(err.response?.data?.detail || "Failed to reset password", "error");
+    } finally {
+      setResetting(false);
     }
   };
 
@@ -412,7 +434,7 @@ function UsersTab() {
           <div className="users-table-wrap">
             <table className="users-table">
               <thead>
-                <tr><th>ID</th><th>Email</th><th>Joined</th><th>Role</th><th>Promote/Demote</th><th>Delete</th></tr>
+                <tr><th>ID</th><th>Email</th><th>Joined</th><th>Role</th><th>Promote/Demote</th><th>Reset Pwd</th><th>Delete</th></tr>
               </thead>
               <tbody>
                 {filtered.map((u) => (
@@ -440,13 +462,49 @@ function UsersTab() {
                       </button>
                     </td>
                     <td>
+                      {resetId === u.id ? (
+                        <div className="reset-pwd-inline">
+                          <input
+                            type="password"
+                            className="field-input sm"
+                            placeholder="New password"
+                            value={resetPassword}
+                            onChange={(e) => setResetPassword(e.target.value)}
+                            minLength={6}
+                          />
+                          <button
+                            className="btn-primary sm"
+                            onClick={() => handleReset(u.id)}
+                            disabled={resetting}
+                          >
+                            {resetting ? <span className="spinner spinner--sm" /> : "Save"}
+                          </button>
+                          <button
+                            className="btn-ghost"
+                            style={{ padding: "7px 10px", fontSize: "0.78rem" }}
+                            onClick={() => { setResetId(null); setResetPassword(""); }}
+                          >
+                            Cancel
+                          </button>
+                        </div>
+                      ) : (
+                        <button
+                          className="btn-reset-pwd"
+                          onClick={() => { setResetId(u.id); setResetPassword(""); }}
+                          title="Reset password"
+                        >
+                          🔑
+                        </button>
+                      )}
+                    </td>
+                    <td>
                       <button className="btn-delete-user" onClick={() => setConfirmDelete(u)} disabled={deletingId === u.id} title="Delete user">
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg>
                       </button>
                     </td>
                   </tr>
                 ))}
-                {filtered.length === 0 && <tr><td colSpan={6} className="table-empty">No users found</td></tr>}
+                {filtered.length === 0 && <tr><td colSpan={7} className="table-empty">No users found</td></tr>}
               </tbody>
             </table>
           </div>

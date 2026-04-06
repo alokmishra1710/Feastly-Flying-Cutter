@@ -21,6 +21,8 @@ class UserOut(UserBase):
     class Config:
         from_attributes = True  # Allows Pydantic to read SQLAlchemy models
 
+class PasswordReset(BaseModel):
+    new_password: str
 
 # --- FOOD ITEM SCHEMAS ---
 class FoodBase(BaseModel):

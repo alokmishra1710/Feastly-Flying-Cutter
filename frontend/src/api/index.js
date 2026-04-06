@@ -61,3 +61,6 @@ export const adminCreateUser = (email, password) =>
 export const toggleAdmin = (user_id) =>
   api.patch(`/users/${user_id}/toggle-admin`);
 export const deleteAccount = (user_id) => api.delete(`/users/${user_id}`);
+
+export const resetUserPassword = (user_id, new_password) =>
+  api.patch(`/users/${user_id}/reset-password`, { new_password });

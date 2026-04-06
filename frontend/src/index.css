@@ -2226,3 +2226,27 @@ img { max-width: 100%; }
   display: flex;
   gap: 8px;
 }
+
+.reset-pwd-inline {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.btn-reset-pwd {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border-radius: var(--r-sm);
+  border: 1px solid transparent;
+  font-size: 0.9rem;
+  transition: all 0.2s;
+}
+
+.btn-reset-pwd:hover {
+  background: rgba(59,130,246,0.1);
+  border-color: rgba(59,130,246,0.25);
+}
