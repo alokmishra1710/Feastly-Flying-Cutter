@@ -3,17 +3,15 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { getOrders } from "../api";
 import { useToast } from "../context/ToastContext";
 
-// Simulated order status based on time elapsed (purely frontend display)
-function getOrderStatus(createdAt) {
-  if (!createdAt) return { label: "Confirmed", step: 0 };
-  const mins = (Date.now() - new Date(createdAt).getTime()) / 60000;
-  if (mins < 5)   return { label: "Order Received", step: 0, color: "var(--amber)" };
-  if (mins < 15)  return { label: "Preparing", step: 1, color: "var(--amber)" };
-  if (mins < 30)  return { label: "Out for Delivery", step: 2, color: "var(--blue)" };
-  return              { label: "Delivered", step: 3, color: "var(--green)" };
-}
+// Real status from DB — no more time-based fake logic
+const STATUS_CONFIG = {
+  pending:           { label: "Order Received",     step: 0, color: "var(--amber)" },
+  preparing:         { label: "Preparing",           step: 1, color: "var(--amber)" },
+  out_for_delivery:  { label: "Out for Delivery",    step: 2, color: "var(--blue)"  },
+  delivered:         { label: "Delivered",           step: 3, color: "var(--green)" },
+};
 
-const STATUS_STEPS = ["Confirmed", "Preparing", "On the way", "Delivered"];
+const STATUS_STEPS = ["Order Received", "Preparing", "Out for Delivery", "Delivered"];
 
 export default function OrdersPage() {
   const [orders, setOrders] = useState([]);
@@ -59,11 +57,10 @@ export default function OrdersPage() {
 
       <div className="orders-list">
         {orders.map((order) => {
-          const status = getOrderStatus(order.created_at);
+          const status = STATUS_CONFIG[order.status] ?? STATUS_CONFIG.pending;
           const isOpen = expanded === order.id;
           return (
             <div key={order.id} className={`order-card${isOpen ? " order-card--open" : ""}`}>
-              {/* Header */}
               <button
                 className="order-card-header"
                 onClick={() => setExpanded(isOpen ? null : order.id)}
@@ -84,10 +81,8 @@ export default function OrdersPage() {
                 </div>
               </button>
 
-              {/* Expanded details */}
               {isOpen && (
                 <div className="order-details">
-                  {/* Status timeline */}
                   <div className="status-timeline">
                     {STATUS_STEPS.map((s, i) => (
                       <div key={s} className={`timeline-step${i <= status.step ? " done" : ""}`}>
@@ -98,13 +93,11 @@ export default function OrdersPage() {
                     ))}
                   </div>
 
-                  {/* Address */}
                   <div className="order-address-row">
                     <span className="order-address-icon">📍</span>
                     <span className="order-address-text">{order.address}</span>
                   </div>
 
-                  {/* Items */}
                   <div className="order-items-table">
                     <div className="order-items-head">
                       <span>Item</span><span>Qty</span><span>Price (at order)</span><span>Subtotal</span>
@@ -118,9 +111,7 @@ export default function OrdersPage() {
                       </div>
                     ))}
                     <div className="order-items-total">
-                      <span>Total</span>
-                      <span />
-                      <span />
+                      <span>Total</span><span /><span />
                       <span>₹{order.total_price.toFixed(2)}</span>
                     </div>
                   </div>

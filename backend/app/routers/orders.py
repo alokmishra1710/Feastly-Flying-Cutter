@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Body
 from sqlalchemy.orm import Session
 from app.schemas.schemas import OrderCreate, OrderOut
 from app.models.models import Order, OrderItem, Cart, User, FoodItem
@@ -79,3 +79,28 @@ def get_all_orders(
             detail="Only admins can view all orders"
         )
     return db.query(Order).order_by(Order.id.desc()).all()
+
+
+@router.patch("/{order_id}/status")
+def update_order_status(
+    order_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+    status: str = Body(..., embed=True)
+):
+    """Admin updates order status. Valid values: pending, preparing, out_for_delivery, delivered"""
+    if not current_user.is_admin:
+        raise HTTPException(status_code=403, detail="Admins only.")
+
+    valid = {"pending", "preparing", "out_for_delivery", "delivered"}
+    if status not in valid:
+        raise HTTPException(status_code=400, detail=f"Invalid status. Must be one of: {valid}")
+
+    order = db.query(Order).filter(Order.id == order_id).first()
+    if not order:
+        raise HTTPException(status_code=404, detail="Order not found")
+
+    order.status = status
+    db.commit()
+    db.refresh(order)
+    return {"message": f"Order #{order_id} status updated to {status}"}

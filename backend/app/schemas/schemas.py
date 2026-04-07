@@ -90,6 +90,7 @@ class OrderOut(OrderBase):
     id: int
     user_id: Optional[int] = None
     total_price: float
+    status: str = "pending"
     created_at: datetime
     items: List[OrderItemOut] = []
     user: Optional[UserOut] = None

@@ -71,3 +71,6 @@ export const deleteAccount = (user_id) => api.delete(`/users/${user_id}`);
 
 export const resetUserPassword = (user_id, new_password) =>
   api.patch(`/users/${user_id}/reset-password`, { new_password });
+
+export const updateOrderStatus = (order_id, status) =>
+  api.patch(`/orders/${order_id}/status`, { status });

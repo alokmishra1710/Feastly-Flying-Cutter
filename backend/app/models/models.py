@@ -51,6 +51,7 @@ class Order(Base):
     user_id = Column(Integer, ForeignKey("users.id"))
     total_price = Column(Float)
     address = Column(String)
+    status = Column(String, default="pending")
     created_at = Column(DateTime, default=lambda: datetime.now(IST))
 
     user = relationship("User", back_populates="orders")

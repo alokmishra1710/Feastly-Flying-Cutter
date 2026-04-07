@@ -3,7 +3,7 @@ import {
   getAllUsers, adminCreateUser, toggleAdmin, deleteAccount,
   resetUserPassword,
   createFood, getFoods, updateFood, deleteFood,
-  getAllOrders,
+  getAllOrders, updateOrderStatus,  
 } from "../api";
 import { useAuth } from "../context/AuthContext";
 import { useToast } from "../context/ToastContext";
@@ -161,6 +161,7 @@ function OrdersTab() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [expanded, setExpanded] = useState(null);
+  const [updatingId, setUpdatingId] = useState(null);
 
   useEffect(() => {
     // GET /orders/all — admin only, returns all orders from all users
@@ -247,8 +248,59 @@ function OrdersTab() {
                     </div>
                   </button>
 
+                  {/* replace this: <button className="admin-order-header" ...> */}
+                  <button className="admin-order-header" onClick={() => setExpanded(isOpen ? null : order.id)}>
+                    <div className="admin-order-left">
+                      <span className="admin-order-id">#{order.id}</span>
+                      <div className="admin-order-meta">
+                        <span className="admin-order-user">{order.user?.email ?? `User #${order.user_id}`}</span>
+                        <span className="admin-order-date">{formatDate(order.created_at)}</span>
+                      </div>
+                    </div>
+                    <div className="admin-order-right">
+                      {/* ↓ ADD THIS status badge */}
+                      <span className={`order-status-pill status-${order.status ?? "pending"}`}>
+                        {{ pending: "⏳ Pending", preparing: "👨‍🍳 Preparing", out_for_delivery: "🚴 On the way", delivered: "✅ Delivered" }[order.status ?? "pending"]}
+                      </span>
+                      <span className="admin-order-items-count">{order.items.length} item{order.items.length !== 1 ? "s" : ""}</span>
+                      <span className="admin-order-amount">₹{order.total_price.toFixed(2)}</span>
+                      <span className={`order-chevron${isOpen ? " order-chevron--open" : ""}`}>▾</span>
+                    </div>
+                  </button>
+
                   {isOpen && (
                     <div className="admin-order-details">
+                      {/* ↓ ADD THIS status control at the top of expanded details */}
+                      <div className="admin-order-status-row">
+                        <label className="field-label" style={{ marginBottom: 0 }}>Update Status:</label>
+                        <select
+                          className="status-select"
+                          value={order.status ?? "pending"}
+                          disabled={updatingId === order.id}
+                          onChange={async (e) => {
+                            const newStatus = e.target.value;
+                            setUpdatingId(order.id);
+                            try {
+                              await updateOrderStatus(order.id, newStatus);
+                              setOrders((prev) =>
+                                prev.map((o) => o.id === order.id ? { ...o, status: newStatus } : o)
+                              );
+                              addToast(`Order #${order.id} marked as "${e.target.options[e.target.selectedIndex].text}"`);
+                            } catch {
+                              addToast("Failed to update order status", "error");
+                            } finally {
+                              setUpdatingId(null);
+                            }
+                          }}
+                        >
+                          <option value="pending">⏳ Pending</option>
+                          <option value="preparing">👨‍🍳 Preparing</option>
+                          <option value="out_for_delivery">🚴 Out for Delivery</option>
+                          <option value="delivered">✅ Delivered</option>
+                        </select>
+                        {updatingId === order.id && <span className="spinner spinner--sm" />}
+                      </div>
+
                       <div className="admin-order-address">
                         <span>📍</span>
                         <span>{order.address}</span>
