@@ -12,7 +12,14 @@ api.interceptors.request.use((config) => {
 api.interceptors.response.use(
   (r) => r,
   (err) => {
-    if (err.response?.status === 401) {
+    // Only auto-redirect on 401 if the user was already logged in (token expired).
+    // Do NOT redirect during login/signup — those 401s are just wrong credentials
+    // and should be handled by the page itself (show an error message).
+    const isAuthRoute =
+      err.config?.url?.includes("/auth/login") ||
+      err.config?.url?.includes("/auth/signup");
+
+    if (err.response?.status === 401 && !isAuthRoute) {
       localStorage.removeItem("access_token");
       localStorage.removeItem("user");
       window.location.href = "/login";
