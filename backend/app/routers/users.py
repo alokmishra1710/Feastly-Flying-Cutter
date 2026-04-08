@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
-from app.schemas.schemas import UserOut, UserCreate, PasswordReset
+from app.schemas.schemas import UserOut, UserCreate, PasswordReset, PasswordChange
 from app.models.models import User
 from app.core.database import get_db
 from app.core.security import hash_password
@@ -128,3 +128,24 @@ def reset_user_password(user_id: int, password_in: PasswordReset, db: Session = 
     db.commit()
 
     return {"message": f"Password reset successfully for {user.email}"}
+
+
+
+@router.patch("/me/change-password")
+def change_password(
+    password_in: PasswordChange,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """Allows a logged-in user to change their own password by providing current password."""
+    from app.core.security import verify_password
+
+    if not verify_password(password_in.current_password, current_user.password):
+        raise HTTPException(status_code=400, detail="Current password is incorrect")
+
+    if len(password_in.new_password) < 6:
+        raise HTTPException(status_code=400, detail="New password must be at least 6 characters")
+
+    current_user.password = hash_password(password_in.new_password)
+    db.commit()
+    return {"message": "Password changed successfully"}

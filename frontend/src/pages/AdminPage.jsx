@@ -1,3 +1,6 @@
+import {
+  ..., toggleFoodAvailability   // ← add this
+} from "../api";
 import { useState, useEffect } from "react";
 import {
   getAllUsers, adminCreateUser, toggleAdmin, deleteAccount,
@@ -14,10 +17,6 @@ export default function AdminPage() {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("overview");
 
-  useEffect(() => {
-    if (user && !isAdmin) navigate("/menu");
-    if (!user) navigate("/login");
-  }, [user, isAdmin]);
 
   if (!isAdmin) return null;
 
@@ -764,6 +763,23 @@ function FoodTab() {
                     </div>
                     <span className="food-admin-price">₹{f.price.toFixed(2)}</span>
                     <div className="food-admin-actions">
+                      <button
+                        className={`btn-availability ${f.is_available ? "available" : "unavailable"}`}
+                        onClick={async () => {
+                          try {
+                            await toggleFoodAvailability(f.id, !f.is_available);
+                            setFoods((prev) =>
+                              prev.map((item) => item.id === f.id ? { ...item, is_available: !f.is_available } : item)
+                            );
+                            addToast(`${f.name} marked as ${!f.is_available ? "available" : "unavailable"}`);
+                          } catch {
+                            addToast("Failed to update availability", "error");
+                          }
+                        }}
+                        title={f.is_available ? "Mark unavailable" : "Mark available"}
+                      >
+                        {f.is_available ? "✅" : "❌"}
+                      </button>
                       {/* Edit button */}
                       <button className="btn-food-edit" onClick={() => startEdit(f)} title="Edit item">
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>

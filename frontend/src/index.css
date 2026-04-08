@@ -2289,3 +2289,52 @@ img { max-width: 100%; }
   background: color-mix(in srgb, var(--green) 15%, transparent);
   color: var(--green);
 }
+
+/* Quantity controls in cart */
+.qty-controls {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  background: var(--surface-2, #222);
+  border-radius: 8px;
+  padding: 2px 4px;
+}
+.qty-btn {
+  width: 28px;
+  height: 28px;
+  border: none;
+  background: transparent;
+  color: var(--text);
+  font-size: 1.1rem;
+  cursor: pointer;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s;
+}
+.qty-btn:hover { background: var(--border); }
+.qty-value {
+  min-width: 20px;
+  text-align: center;
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+/* Cancelled order card */
+.order-card--cancelled {
+  opacity: 0.65;
+  border-color: var(--error, #e55) !important;
+}
+
+/* Availability toggle button */
+.btn-availability {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 1rem;
+  padding: 4px 6px;
+  border-radius: 6px;
+  transition: background 0.15s;
+}
+.btn-availability:hover { background: var(--border); }

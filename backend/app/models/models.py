@@ -3,7 +3,6 @@ from sqlalchemy.orm import relationship
 from datetime import datetime, timezone, timedelta
 from app.core.database import Base
 
-# Define IST Timezone (UTC + 5:30)
 IST = timezone(timedelta(hours=5, minutes=30))
 
 class User(Base):
@@ -14,8 +13,6 @@ class User(Base):
     password = Column(String)
     is_admin = Column(Boolean, default=False)
     created_at = Column(DateTime, default=lambda: datetime.now(IST))
-    #We use a lambda function so the time is calculated exactly when the user is created, not when the server starts.
-
 
     carts = relationship("Cart", back_populates="user")
     orders = relationship("Order", back_populates="user")
@@ -28,6 +25,7 @@ class FoodItem(Base):
     name = Column(String)
     description = Column(String)
     price = Column(Float)
+    is_available = Column(Boolean, default=True)   # ← NEW
 
     carts = relationship("Cart", back_populates="food")
 
@@ -62,12 +60,11 @@ class OrderItem(Base):
     __tablename__ = "order_items"
 
     id = Column(Integer, primary_key=True)
-    order_id = Column(Integer, ForeignKey("orders.id")) 
-    food_id = Column(Integer, ForeignKey("food_items.id")) 
-    
+    order_id = Column(Integer, ForeignKey("orders.id"))
+    food_id = Column(Integer, ForeignKey("food_items.id"))
+    food_name = Column(String, nullable=True)      # ← NEW: captured at order time
     quantity = Column(Integer, default=1)
-    price_at_order = Column(Float) 
+    price_at_order = Column(Float)
 
     order = relationship("Order", back_populates="items")
-    # Added back_populates to keep it consistent if needed later
     food = relationship("FoodItem")

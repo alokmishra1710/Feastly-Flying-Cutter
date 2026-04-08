@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { useToast } from "../context/ToastContext";
 import { deleteAccount } from "../api";
+import { changePassword } from "../api";
 
 export default function ProfilePage() {
   const { user, logout } = useAuth();
@@ -11,6 +12,10 @@ export default function ProfilePage() {
   const [showConfirm, setShowConfirm] = useState(false);
   const [confirmText, setConfirmText] = useState("");
   const [deleting, setDeleting] = useState(false);
+  const [showPwdForm, setShowPwdForm] = useState(false);
+  const [currentPwd, setCurrentPwd] = useState("");
+  const [newPwd, setNewPwd] = useState("");
+  const [changingPwd, setChangingPwd] = useState(false);
 
   const handleDeleteAccount = async () => {
     if (confirmText !== user.email) {
@@ -30,6 +35,23 @@ export default function ProfilePage() {
         "error"
       );
       setDeleting(false);
+    }
+  };
+
+  const handleChangePassword = async (e) => {
+    e.preventDefault();
+    if (newPwd.length < 6) { addToast("New password must be at least 6 characters", "error"); return; }
+    setChangingPwd(true);
+    try {
+      await changePassword(currentPwd, newPwd);
+      addToast("Password changed successfully!");
+      setShowPwdForm(false);
+      setCurrentPwd("");
+      setNewPwd("");
+    } catch (err) {
+      addToast(err.response?.data?.detail || "Failed to change password", "error");
+    } finally {
+      setChangingPwd(false);
     }
   };
 
@@ -83,6 +105,37 @@ export default function ProfilePage() {
           </button>
         )}
       </div>
+
+
+        {/* Change Password */}
+        <div className="profile-card" style={{ marginTop: "1.5rem" }}>
+          <div style={{ flex: 1 }}>
+            <h3 style={{ margin: "0 0 4px", fontSize: "1rem" }}>Change Password</h3>
+            <p style={{ margin: 0, fontSize: "0.85rem", opacity: 0.6 }}>Update your account password</p>
+          </div>
+          <button className="btn-ghost" onClick={() => setShowPwdForm(!showPwdForm)}>
+            {showPwdForm ? "Cancel" : "Change"}
+          </button>
+        </div>
+
+        {showPwdForm && (
+          <form onSubmit={handleChangePassword} className="profile-card" style={{ flexDirection: "column", alignItems: "stretch", gap: "1rem", marginTop: "0.5rem" }}>
+            <div className="field-group" style={{ margin: 0 }}>
+              <label className="field-label">Current Password</label>
+              <input type="password" className="field-input" placeholder="Enter current password"
+                value={currentPwd} onChange={(e) => setCurrentPwd(e.target.value)} required />
+            </div>
+            <div className="field-group" style={{ margin: 0 }}>
+              <label className="field-label">New Password</label>
+              <input type="password" className="field-input" placeholder="Min. 6 characters"
+                value={newPwd} onChange={(e) => setNewPwd(e.target.value)} required minLength={6} />
+            </div>
+            <button type="submit" className="btn-primary" disabled={changingPwd}>
+              {changingPwd ? <><span className="spinner" /> Saving…</> : "Save New Password"}
+            </button>
+          </form>
+        )}
+
 
       {/* Danger Zone */}
       <div className="danger-zone">

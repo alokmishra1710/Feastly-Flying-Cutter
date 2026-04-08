@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { getCart, createOrder, deleteCartItem } from "../api";
+import { getCart, createOrder, deleteCartItem, updateCartQuantity } from "../api";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "../context/ToastContext";
 import { useCart } from "../context/CartContext";
@@ -12,8 +12,9 @@ export default function CartPage() {
   const [loading, setLoading] = useState(true);
   const [address, setAddress] = useState("");
   const [placing, setPlacing] = useState(false);
-  const [step, setStep] = useState("cart"); // "cart" | "checkout"
+  const [step, setStep] = useState("cart");
   const [removingId, setRemovingId] = useState(null);
+  const [updatingId, setUpdatingId] = useState(null);  // ← NEW
 
   useEffect(() => {
     getCart()
@@ -31,8 +32,6 @@ export default function CartPage() {
     if (!address.trim()) { addToast("Please enter a delivery address", "error"); return; }
     setPlacing(true);
     try {
-      // POST /orders/ — body: { address }
-      // Server fetches cart, calculates price, creates order, clears cart
       await createOrder(address);
       await refreshCount();
       addToast("Order placed successfully! 🎉");
@@ -57,6 +56,23 @@ export default function CartPage() {
     }
   };
 
+  // ← NEW: handle quantity change
+  const handleQuantity = async (cartId, newQty) => {
+    if (newQty < 1) { handleRemove(cartId); return; }
+    setUpdatingId(cartId);
+    try {
+      await updateCartQuantity(cartId, newQty);
+      setCart((prev) =>
+        prev.map((i) => i.id === cartId ? { ...i, quantity: newQty } : i)
+      );
+      await refreshCount();
+    } catch (err) {
+      addToast(err.response?.data?.detail || "Failed to update quantity", "error");
+    } finally {
+      setUpdatingId(null);
+    }
+  };
+
   if (loading) return <PageLoader />;
 
   if (cart.length === 0) {
@@ -66,9 +82,7 @@ export default function CartPage() {
           <div className="empty-page-icon">🛒</div>
           <h2 className="empty-page-title">Your cart is empty</h2>
           <p className="empty-page-sub">Looks like you haven't added anything yet.</p>
-          <button className="btn-primary" onClick={() => navigate("/menu")}>
-            Browse Menu
-          </button>
+          <button className="btn-primary" onClick={() => navigate("/menu")}>Browse Menu</button>
         </div>
       </div>
     );
@@ -81,7 +95,6 @@ export default function CartPage() {
         <p className="page-sub">{cart.length} item{cart.length !== 1 ? "s" : ""} · ₹{subtotal.toFixed(2)}</p>
       </div>
 
-      {/* Progress steps */}
       <div className="order-steps">
         <div className={`order-step${step === "cart" ? " active" : " done"}`}>
           <div className="step-circle">{step === "checkout" ? "✓" : "1"}</div>
@@ -95,7 +108,6 @@ export default function CartPage() {
       </div>
 
       <div className="cart-layout">
-        {/* Items */}
         <div className="cart-items-panel">
           {step === "cart" && (
             <>
@@ -109,7 +121,24 @@ export default function CartPage() {
                       <span className="cart-item-unit">₹{(item.food?.price ?? 0).toFixed(2)} each</span>
                     </div>
                     <div className="cart-item-right">
-                      <div className="qty-badge">× {item.quantity}</div>
+                      {/* ← NEW quantity controls */}
+                      <div className="qty-controls">
+                        <button
+                          className="qty-btn"
+                          onClick={() => handleQuantity(item.id, item.quantity - 1)}
+                          disabled={updatingId === item.id}
+                        >−</button>
+                        <span className="qty-value">
+                          {updatingId === item.id
+                            ? <span className="spinner spinner--sm" />
+                            : item.quantity}
+                        </span>
+                        <button
+                          className="qty-btn"
+                          onClick={() => handleQuantity(item.id, item.quantity + 1)}
+                          disabled={updatingId === item.id}
+                        >+</button>
+                      </div>
                       <div className="cart-item-subtotal">
                         ₹{((item.food?.price ?? 0) * item.quantity).toFixed(2)}
                       </div>
@@ -129,7 +158,6 @@ export default function CartPage() {
                 ))}
               </div>
 
-              {/* Note */}
               <p className="cart-server-note">
                 💡 Prices are verified server-side at checkout. No surprises.
               </p>
@@ -148,7 +176,7 @@ export default function CartPage() {
               <h3 className="checkout-section-title">Delivery Address</h3>
               <textarea
                 className="field-input textarea"
-                placeholder="Enter your full delivery address including flat/house number, street, city, pincode…"
+                placeholder="Enter your full delivery address…"
                 value={address}
                 onChange={(e) => setAddress(e.target.value)}
                 rows={4}
@@ -172,7 +200,6 @@ export default function CartPage() {
           )}
         </div>
 
-        {/* Summary sidebar */}
         <div className="cart-summary">
           <h3 className="summary-title">Order Summary</h3>
           <div className="summary-row"><span>Subtotal</span><span>₹{subtotal.toFixed(2)}</span></div>

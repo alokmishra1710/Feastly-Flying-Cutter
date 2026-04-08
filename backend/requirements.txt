@@ -4,7 +4,6 @@ sqlalchemy
 psycopg2-binary
 python-jose
 passlib[argon2]
-argon2-cffi
 python-dotenv
 httpx
 pydantic

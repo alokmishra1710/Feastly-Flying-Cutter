@@ -1,6 +1,6 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Response
 from sqlalchemy.orm import Session
-from app.schemas.schemas import CartCreate, CartOut
+from app.schemas.schemas import CartCreate, CartOut, CartUpdate
 from app.models.models import Cart, User # Import User model
 from app.core.database import get_db
 from app.routers.deps import get_current_user # This is the dependency we'll build
@@ -69,4 +69,30 @@ def remove_from_cart(
 
     db.delete(cart_item)
     db.commit()
-    # 204 No Content — return nothing
+    
+@router.patch("/{cart_id}", response_model=CartOut)
+def update_cart_quantity(
+    cart_id: int,
+    cart_in: CartUpdate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """Update quantity of a cart item. Use quantity=0 to remove."""
+    from app.schemas.schemas import CartUpdate
+
+    cart_item = db.query(Cart).filter(Cart.id == cart_id).first()
+    if not cart_item:
+        raise HTTPException(status_code=404, detail="Cart item not found")
+
+    if cart_item.user_id != current_user.id:
+        raise HTTPException(status_code=403, detail="Not your cart item")
+
+    if cart_in.quantity <= 0:
+        db.delete(cart_item)
+        db.commit()
+        return Response(status_code=204)
+
+    cart_item.quantity = cart_in.quantity
+    db.commit()
+    db.refresh(cart_item)
+    return cart_item

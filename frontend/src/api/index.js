@@ -74,3 +74,20 @@ export const resetUserPassword = (user_id, new_password) =>
 
 export const updateOrderStatus = (order_id, status) =>
   api.patch(`/orders/${order_id}/status`, { status });
+
+
+// ── Cart update quantity ──────────────────────────────────────
+export const updateCartQuantity = (cart_id, quantity) =>
+  api.patch(`/cart/${cart_id}`, { quantity });
+
+// ── Order cancel ──────────────────────────────────────────────
+export const cancelOrder = (order_id) =>
+  api.patch(`/orders/${order_id}/cancel`);
+
+// ── Food availability toggle ──────────────────────────────────
+export const toggleFoodAvailability = (food_id, is_available) =>
+  api.patch(`/food/${food_id}`, { is_available });
+
+// ── User change password ──────────────────────────────────────
+export const changePassword = (current_password, new_password) =>
+  api.patch(`/users/me/change-password`, { current_password, new_password });
