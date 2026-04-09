@@ -1,12 +1,10 @@
-import {
-  ..., toggleFoodAvailability   // ← add this
-} from "../api";
+
 import { useState, useEffect } from "react";
 import {
   getAllUsers, adminCreateUser, toggleAdmin, deleteAccount,
   resetUserPassword,
   createFood, getFoods, updateFood, deleteFood,
-  getAllOrders, updateOrderStatus,  
+  getAllOrders, updateOrderStatus, toggleFoodAvailability,
 } from "../api";
 import { useAuth } from "../context/AuthContext";
 import { useToast } from "../context/ToastContext";
