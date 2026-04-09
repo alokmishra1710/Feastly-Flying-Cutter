@@ -234,14 +234,15 @@ function FoodCard({ food, index, onAdd, adding, added, isLoggedIn }) {
   }, [food.id, food.name]);
 
   const showEmoji = !imgLoading && !imgUrl;
+  const unavailable = food.is_available === false;  // ← NEW
 
   return (
-    <div className={`food-card${added ? " food-card--added" : ""}`}
-      style={{ animationDelay: `${index * 0.06}s` }}>
-
+    <div
+      className={`food-card${added ? " food-card--added" : ""}${unavailable ? " food-card--unavailable" : ""}`}
+      style={{ animationDelay: `${index * 0.06}s` }}
+    >
       <div className="food-card-img-wrap">
         {imgLoading && <div className="food-card-img-skeleton" />}
-
         {imgUrl && (
           <img
             src={imgUrl}
@@ -251,14 +252,19 @@ function FoodCard({ food, index, onAdd, adding, added, isLoggedIn }) {
             onError={() => { setImgUrl(null); setImgLoading(false); }}
           />
         )}
-
         {showEmoji && (
           <div className="food-card-img-fallback">
             <span className="food-card-emoji">{getFoodEmoji(food.name)}</span>
           </div>
         )}
-
         <div className="food-img-price-badge">₹{food.price.toFixed(2)}</div>
+
+        {/* ← NEW unavailable overlay */}
+        {unavailable && (
+          <div className="food-card-unavailable-overlay">
+            <span>Currently Unavailable</span>
+          </div>
+        )}
       </div>
 
       <div className="food-card-body">
@@ -271,11 +277,20 @@ function FoodCard({ food, index, onAdd, adding, added, isLoggedIn }) {
           <span className="food-price-label">Price</span>
           <span className="food-price">₹{food.price.toFixed(2)}</span>
         </div>
-        <button className={`btn-add${added ? " btn-add--done" : ""}`}
-          onClick={() => onAdd(food)} disabled={adding}>
-          {adding ? <span className="spinner spinner--sm" />
-            : added ? <><span>✓</span> Added</>
-            : <><span className="btn-add-plus">+</span>{isLoggedIn ? "Add" : "Login"}</>}
+        {/* ← disable button if unavailable */}
+        <button
+          className={`btn-add${added ? " btn-add--done" : ""}`}
+          onClick={() => !unavailable && onAdd(food)}
+          disabled={adding || unavailable}
+        >
+          {unavailable
+            ? "Unavailable"
+            : adding
+              ? <span className="spinner spinner--sm" />
+              : added
+                ? <><span>✓</span> Added</>
+                : <><span className="btn-add-plus">+</span>{isLoggedIn ? "Add" : "Login"}</>
+          }
         </button>
       </div>
     </div>

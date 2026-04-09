@@ -2338,3 +2338,24 @@ img { max-width: 100%; }
   transition: background 0.15s;
 }
 .btn-availability:hover { background: var(--border); }
+
+.food-card--unavailable {
+  opacity: 0.6;
+}
+.food-card-unavailable-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0,0,0,0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: inherit;
+}
+.food-card-unavailable-overlay span {
+  color: #fff;
+  font-size: 0.85rem;
+  font-weight: 600;
+  background: rgba(0,0,0,0.5);
+  padding: 4px 12px;
+  border-radius: 20px;
+}
