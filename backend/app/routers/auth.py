@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, status, Form
 from sqlalchemy.orm import Session
-from app.schemas.schemas import UserCreate, UserLogin, UserOut, Token  # Added Token
+from app.schemas.schemas import UserCreate, UserLogin, UserOut, Token, ForgotPassword  # Added Token
 from app.models.models import User
 from app.core.database import get_db
 from app.core.security import hash_password, verify_password, create_access_token
@@ -66,3 +66,21 @@ async def login(
             "is_admin": db_user.is_admin # <--- Frontend now knows the role!
         }
     }
+
+
+@router.post("/forgot-password")
+async def forgot_password(data: ForgotPassword, db: Session = Depends(get_db)):
+    """Allows a user to reset their own password by verifying their email + reCAPTCHA."""
+    if not await verify_recaptcha(data.recaptcha_token):
+        raise HTTPException(status_code=400, detail="Invalid reCAPTCHA")
+
+    user = db.query(User).filter(User.email == data.email).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="No account found with that email")
+
+    if len(data.new_password) < 6:
+        raise HTTPException(status_code=400, detail="Password must be at least 6 characters")
+
+    user.password = hash_password(data.new_password)
+    db.commit()
+    return {"message": "Password reset successfully"}

@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
-from app.schemas.schemas import UserOut, UserCreate, PasswordReset, PasswordChange
+from app.schemas.schemas import UserOut, UserCreate,  PasswordChange
 from app.models.models import User
 from app.core.database import get_db
 from app.core.security import hash_password
@@ -105,29 +105,6 @@ def delete_user(
     db.delete(user_to_delete)
     db.commit()
     # 204 No Content — return nothing
-
-@router.patch("/{user_id}/reset-password")
-def reset_user_password(user_id: int, password_in: PasswordReset, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
-    """
-    Admin resets a user's password directly.
-    No email needed — admin tells user their new password.
-    Admin only.
-    """
-    if not current_user.is_admin:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Only admins can reset passwords"
-        )
-
-    user = db.query(User).filter(User.id == user_id).first()
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
-
-    # Hash the new password before storing
-    user.password = hash_password(password_in.new_password)
-    db.commit()
-
-    return {"message": f"Password reset successfully for {user.email}"}
 
 
 

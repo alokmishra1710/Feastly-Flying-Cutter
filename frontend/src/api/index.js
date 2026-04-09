@@ -69,9 +69,6 @@ export const toggleAdmin = (user_id) =>
   api.patch(`/users/${user_id}/toggle-admin`);
 export const deleteAccount = (user_id) => api.delete(`/users/${user_id}`);
 
-export const resetUserPassword = (user_id, new_password) =>
-  api.patch(`/users/${user_id}/reset-password`, { new_password });
-
 export const updateOrderStatus = (order_id, status) =>
   api.patch(`/orders/${order_id}/status`, { status });
 
@@ -91,3 +88,7 @@ export const toggleFoodAvailability = (food_id, is_available) =>
 // ── User change password ──────────────────────────────────────
 export const changePassword = (current_password, new_password) =>
   api.patch(`/users/me/change-password`, { current_password, new_password });
+
+// ------user forgot password-------
+export const forgotPassword = (email, new_password, recaptcha_token) =>
+  api.post("/auth/forgot-password", { email, new_password, recaptcha_token });

@@ -28,6 +28,11 @@ class PasswordChange(BaseModel):          # ← NEW: for user self-service passw
     current_password: str
     new_password: str
 
+class ForgotPassword(BaseModel):
+    email: EmailStr
+    new_password: str
+    recaptcha_token: str
+
 # --- FOOD ITEM SCHEMAS ---
 class FoodBase(BaseModel):
     name: str

@@ -2,7 +2,7 @@
 import { useState, useEffect } from "react";
 import {
   getAllUsers, adminCreateUser, toggleAdmin, deleteAccount,
-  resetUserPassword,
+
   createFood, getFoods, updateFood, deleteFood,
   getAllOrders, updateOrderStatus, toggleFoodAvailability,
 } from "../api";
@@ -344,10 +344,7 @@ function UsersTab() {
   const [togglingId, setTogglingId] = useState(null);
   const [deletingId, setDeletingId] = useState(null);
   const [confirmDelete, setConfirmDelete] = useState(null);
-  const [resetId, setResetId] = useState(null);
-  const [resetPassword, setResetPassword] = useState("");
-  const [resetting, setResetting] = useState(false);
-
+  
   const load = () => {
     setLoading(true);
     getAllUsers().then((r) => setUsers(r.data)).finally(() => setLoading(false));
@@ -402,23 +399,6 @@ function UsersTab() {
     }
   };
 
-  const handleReset = async (userId) => {
-    if (!resetPassword.trim() || resetPassword.length < 6) {
-      addToast("Password must be at least 6 characters", "error");
-      return;
-    }
-    setResetting(true);
-    try {
-      const res = await resetUserPassword(userId, resetPassword);
-      addToast(res.data.message || "Password reset successfully!");
-      setResetId(null);
-      setResetPassword("");
-    } catch (err) {
-      addToast(err.response?.data?.detail || "Failed to reset password", "error");
-    } finally {
-      setResetting(false);
-    }
-  };
 
   return (
     <div className="admin-section">
@@ -483,7 +463,7 @@ function UsersTab() {
           <div className="users-table-wrap">
             <table className="users-table">
               <thead>
-                <tr><th>ID</th><th>Email</th><th>Joined</th><th>Role</th><th>Promote/Demote</th><th>Reset Pwd</th><th>Delete</th></tr>
+                <tr><th>ID</th><th>Email</th><th>Joined</th><th>Role</th><th>Promote/Demote</th><th>Delete</th></tr>
               </thead>
               <tbody>
                 {filtered.map((u) => (
@@ -509,42 +489,6 @@ function UsersTab() {
                         onClick={() => handleToggle(u)} disabled={togglingId === u.id}>
                         {togglingId === u.id ? <span className="spinner spinner--sm" /> : u.is_admin ? "Demote" : "Promote"}
                       </button>
-                    </td>
-                    <td>
-                      {resetId === u.id ? (
-                        <div className="reset-pwd-inline">
-                          <input
-                            type="password"
-                            className="field-input sm"
-                            placeholder="New password"
-                            value={resetPassword}
-                            onChange={(e) => setResetPassword(e.target.value)}
-                            minLength={6}
-                          />
-                          <button
-                            className="btn-primary sm"
-                            onClick={() => handleReset(u.id)}
-                            disabled={resetting}
-                          >
-                            {resetting ? <span className="spinner spinner--sm" /> : "Save"}
-                          </button>
-                          <button
-                            className="btn-ghost"
-                            style={{ padding: "7px 10px", fontSize: "0.78rem" }}
-                            onClick={() => { setResetId(null); setResetPassword(""); }}
-                          >
-                            Cancel
-                          </button>
-                        </div>
-                      ) : (
-                        <button
-                          className="btn-reset-pwd"
-                          onClick={() => { setResetId(u.id); setResetPassword(""); }}
-                          title="Reset password"
-                        >
-                          🔑
-                        </button>
-                      )}
                     </td>
                     <td>
                       <button className="btn-delete-user" onClick={() => setConfirmDelete(u)} disabled={deletingId === u.id} title="Delete user">
